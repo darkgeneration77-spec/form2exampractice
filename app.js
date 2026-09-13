@@ -6,7 +6,12 @@ const mids=['During the preparation, the group checked its progress and made a f
 const outros=['At the end, the class discussed what had gone well and what could be improved next time.','After the session, the students reviewed the activity and shared what they had learned.','When the activity ended, the group packed the materials and talked about the experience.'];
 function pairs(){return window.PAIRS||[]} function sets(){return window.SETS||[]}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-async function recoverBank(){if(sets().length===200&&pairs().length>=69)return true;const files=['pairs1.js','pairs2.js','pairs3.js','sets1.js','sets2.js'];for(const f of files){try{const r=await fetch('./'+f+'?fresh='+Date.now(),{cache:'no-store'});if(!r.ok)continue;const code=await r.text();(0,eval)(code)}catch(e){console.warn('Bank recovery failed:',f,e)}}return sets().length===200&&pairs().length>=69}
+async function loadScriptText(file){const r=await fetch('./'+file+'?fresh='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(file+' HTTP '+r.status);const code=await r.text();(0,eval)(code)}
+async function recoverBank(){
+  if(pairs().length===0){for(const f of ['pairs1.js','pairs2.js','pairs3.js']){try{await loadScriptText(f)}catch(e){console.warn('Grammar recovery failed:',f,e)}}}
+  if(sets().length===0){for(const f of ['lesson-a.js','lesson-b.js']){try{await loadScriptText(f)}catch(e){console.warn('Set recovery failed:',f,e)}}}
+  return sets().length===200&&pairs().length===69;
+}
 function sentence(pid,num,name,setNo,pos){const p=pairs()[pid];if(!p)return `<span class="error">(${num}) [data unavailable]</span>`;const arr=p[5],t=arr[(setNo+pos)%arr.length];return t.replaceAll('{NAME}',name).replace('{M}',`<span class="error">(${num}) ${esc(p[0])}</span>`)}
 function passage(set){const [n,title,ids]=set,name=NAMES[(n-1)%NAMES.length],start=n>=71?9:1,s=ids.map((pid,i)=>sentence(pid,start+i,name,n,i));return `<div class="passage"><p>${intros[n%3](name)} ${s.slice(0,3).join(' ')}</p><p>${mids[n%3]} ${s.slice(3,6).join(' ')}</p><p>${s.slice(6).join(' ')} ${outros[n%3]}</p></div>`}
 function row(pid,i,start){return `<div class="answerRow"><label>${start+i}.</label><input class="ans" data-pid="${pid}" autocomplete="off" spellcheck="false" placeholder="Type your correction"></div>`}
