@@ -1,0 +1,1 @@
+window.__BANK_LOADER_OK__=true;
